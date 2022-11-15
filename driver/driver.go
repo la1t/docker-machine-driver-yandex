@@ -427,6 +427,11 @@ func (d *Driver) Kill() error {
 }
 
 func (d *Driver) Remove() error {
+	if d.InstanceID == "" {
+		log.Warn("Remove instance without ID, proceeding with removing local reference")
+		return nil
+	}
+
 	c, err := d.buildClient()
 	if err != nil {
 		return err
@@ -437,7 +442,12 @@ func (d *Driver) Remove() error {
 		InstanceId: d.InstanceID,
 	}))
 	if err != nil {
-		return err
+		if isNotFound(err) {
+			log.Warn("Remote instance does not exist, proceeding with removing local reference")
+			return nil
+		} else {
+			return err
+		}
 	}
 
 	return op.Wait(ctx)

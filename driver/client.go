@@ -18,6 +18,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 const MaxRetries = 3
@@ -276,4 +277,17 @@ func (c *YCClient) instanceAddresses(instance *compute.Instance) (ipV4Int, ipV4E
 
 func toBytes(gigabytesCount int) int64 {
 	return int64((datasize.ByteSize(gigabytesCount) * datasize.GB).Bytes())
+}
+
+func isNotFound(err error) bool {
+	grpcErr, ok := status.FromError(err)
+	if !ok {
+		return false
+	}
+
+	if grpcErr.Code() == codes.NotFound {
+		return true
+	}
+
+	return false
 }
